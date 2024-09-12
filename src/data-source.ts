@@ -73,6 +73,7 @@ async function initializeSingleLocationForcast(location: Location) {
 
     const url = `/2.5/forecast?lat=${location.lat}&lon=${location.lon}&appid=${process.env['OPEN_WEATHER_KEY']}&units=metric`;
     const forcast = await forcastClient.get<WeatherAPIForcast>(url);
+    
     const locationForcasts = forcast.data.list.map((forcast) =>
         forcastsRepository.create({
             humidity: forcast.main.humidity,
