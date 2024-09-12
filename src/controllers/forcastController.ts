@@ -4,6 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import { AppDataSource } from '../data-source';
 import { Forcast } from '../entity/Forcast';
 import memoizee = require('memoizee');
+import { lastFeelLikeQuery } from '../utils/sql-queries'
 
 const MEMOIZE_MAX_AGE = 1000 * 60 * 5;
 const MEMOIZE_CACHE_SIZE = 100;
@@ -29,21 +30,18 @@ export const getLastFeelLikeRanked = async (req: Request, res: Response) => {
     res.status(StatusCodes.OK).json(result);
 };
 
-async function getLastFeelLikeQuery(orderBy: string) {
-    return await AppDataSource.query(`
-        SELECT location.name, latest_forcast.feels_like
-        FROM location
-        INNER JOIN (
-          SELECT DISTINCT ON (forcast."locationId") forcast."locationId", forcast.feels_like
-          FROM forcast
-          ORDER BY forcast."locationId", forcast.ts DESC
-        ) AS latest_forcast
-        ON location.id = latest_forcast."locationId"
-        ORDER BY latest_forcast.feels_like ${orderBy}
-      `);
-}
 
 const getLastFeelLikeMemoized = memoizee(getLastFeelLikeQuery, {
+    promise: true,
+    max: MEMOIZE_CACHE_SIZE,
+    maxAge: MEMOIZE_MAX_AGE,
+});
+
+async function getLastFeelLikeQuery(orderBy: string) {
+    return await AppDataSource.query(lastFeelLikeQuery(orderBy));
+}
+
+const getLowestHumidityMemoized = memoizee(getLowestHumidityQuery, {
     promise: true,
     max: MEMOIZE_CACHE_SIZE,
     maxAge: MEMOIZE_MAX_AGE,
@@ -64,13 +62,14 @@ async function getLowestHumidityQuery() {
     return result;
 }
 
-const getLowestHumidityMemoized = memoizee(getLowestHumidityQuery, {
+const getAverageTempMemoized = memoizee(getAverageTempQuery, {
     promise: true,
     max: MEMOIZE_CACHE_SIZE,
     maxAge: MEMOIZE_MAX_AGE,
 });
 
 async function getAverageTempQuery() {
+
     const forcastRepository = AppDataSource.getRepository(Forcast);
 
     const result = await forcastRepository
@@ -86,9 +85,3 @@ async function getAverageTempQuery() {
         .getRawMany();
     return result;
 }
-
-const getAverageTempMemoized = memoizee(getAverageTempQuery, {
-    promise: true,
-    max: MEMOIZE_CACHE_SIZE,
-    maxAge: MEMOIZE_MAX_AGE,
-});

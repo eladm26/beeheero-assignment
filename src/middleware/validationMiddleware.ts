@@ -8,10 +8,7 @@ export const validateFeelLikeQueryParams = [
     query('orderBy').exists().withMessage('must define orderBy'),
     oneOf([query('orderBy').equals('asc'), query('orderBy').equals('desc')], {message: 'orderBy can only be asc or desc'}),
     (req: Request, _: Response, next: NextFunction) => {
-        console.log('inside validator');
-
         const errors = validationResult(req);
-        console.log('elad', errors);
 
         if (!errors.isEmpty()) {
             const errorMessages: string[] = errors
