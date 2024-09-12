@@ -5,9 +5,9 @@ import { AppDataSource } from '../data-source';
 import { Forcast } from '../entity/Forcast';
 
 export const getAverageTemp = async (_1: Request, res: Response) => {
-    const forcasrRepository = AppDataSource.getRepository(Forcast);
+    const forcastRepository = AppDataSource.getRepository(Forcast);
 
-    const result = await forcasrRepository
+    const result = await forcastRepository
         .createQueryBuilder('forcast')
         .innerJoinAndSelect('forcast.location', 'location')
         .select('location.name', 'name')
@@ -19,8 +19,21 @@ export const getAverageTemp = async (_1: Request, res: Response) => {
         .addOrderBy('day', 'ASC')
         .getRawMany();
 
-    console.log(result);
+    res.status(StatusCodes.OK).json({ averages: result });
+};
 
-    res.status(StatusCodes.OK).json({averages: result});
+export const getGlobalLowestHumidity = async (_1: Request, res: Response) => {
+    const forcastRepository = AppDataSource.getRepository(Forcast);
 
+    const result = await forcastRepository
+        .createQueryBuilder('forcast')
+        .innerJoinAndSelect('forcast.location', 'location')
+        .select('location.name', 'name')
+        .addSelect('forcast.ts', 'time')
+        .addSelect('forcast.humidity', 'humidity')
+        .orderBy('forcast.humidity', 'ASC')
+        .limit(1)
+        .getRawOne();
+
+    res.status(StatusCodes.OK).json(result);
 };
