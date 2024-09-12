@@ -15,7 +15,6 @@ const PORT: string | number = process.env['PORT'] || 3000;
 
 app.use('/api/v1/forcast', forCastRouter);
 app.use('/api/v1/geolocation', geolocationRouter);
-
 app.use('*', (_, res) => {
     res.status(404).json({ msg: 'not found' });
 });

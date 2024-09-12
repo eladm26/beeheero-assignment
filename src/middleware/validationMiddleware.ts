@@ -1,30 +1,24 @@
-import { param, ValidationChain, validationResult } from 'express-validator';
-import { BadRequestError, NotFoundError, UnauthorizedError } from '../errors/customErrors';
+import { oneOf, query,  validationResult } from 'express-validator';
+import {
+    BadRequestError,
+} from '../errors/customErrors';
 import { NextFunction, Request, Response } from 'express';
 
+export const validateFeelLikeQueryParams = [
+    query('orderBy').exists().withMessage('must define orderBy'),
+    oneOf([query('orderBy').equals('asc'), query('orderBy').equals('desc')], {message: 'orderBy can only be asc or desc'}),
+    (req: Request, _: Response, next: NextFunction) => {
+        console.log('inside validator');
 
-const withValidationErrors = (validateValues: ValidationChain[]) => {
-    return [
-        validateValues,
-        (req: Request, _: Response, next: NextFunction) => {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                const errorMessages: string[] = errors.array().map((error) => error.msg);
-                if (errorMessages[0]?.startsWith('no job')) {
-                    throw new NotFoundError(errorMessages[0]);
-                }
-                if (errorMessages[0]?.startsWith('not authorized')) {
-                    throw new UnauthorizedError(errorMessages[0]);
-                }
-                console.log(errorMessages);
-                throw new BadRequestError(errorMessages[0] ?? '');
-            }
-            next();
-        },
-    ];
-};
+        const errors = validationResult(req);
+        console.log('elad', errors);
 
-
-export const validateIdParam = withValidationErrors([
-    param('id').exists()
-]);
+        if (!errors.isEmpty()) {
+            const errorMessages: string[] = errors
+                .array()
+                .map((error) => error.msg);
+            throw new BadRequestError(errorMessages[0] ?? '');
+        }
+        return next();
+    },
+];
