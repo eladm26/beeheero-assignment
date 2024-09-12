@@ -1,9 +1,25 @@
-version: '3.9'
-
 services:
+  postgresdb:
+    image: postgres
+    expose:
+      - $POSTGRESDB_DOCKER_PORT
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - POSTGRES_USER=$POSTGRESDB_USER
+      - POSTGRES_PASSWORD=$POSTGRESDB_ROOT_PASSWORD
+      - POSTGRES_DB=$POSTGRESDB_DATABASE
+    ports:
+      - $POSTGRESDB_LOCAL_PORT:$POSTGRESDB_DOCKER_PORT
+    volumes:
+      - ./db:/var/lib/postgres
+
   spelling-bee:
+    depends_on:
+      - postgresdb
     build:
       context: .
+    restart: unless-stopped
     ports:
       - '3000:3000'
     volumes:
