@@ -1,8 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Location } from './Locations';
 
 @Entity()
 @Unique(['ts', 'location'])
+@Index('idx_forcast_location_ts', ['location.id', 'ts'])
+@Index('idx_forcast_feels_like', ['feels_like'])
 export class Forcast {
     @PrimaryGeneratedColumn()
     id: number;
